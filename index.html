@@ -73,9 +73,8 @@
         }
 
         function resetVotes() {
-            for (let key in votes) {
-                votes[key] = 0;
-            }
+            votes = {}; // Kosongkan pilihan
+            document.getElementById('buttons').innerHTML = ""; // Kosongkan butang pilihan
             updateResults();
         }
 
