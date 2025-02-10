@@ -32,6 +32,11 @@
         <div class="chart-container">
             <canvas id="voteChart"></canvas>
         </div>
+        
+        <p><strong>Kongsi Undian:</strong></p>
+        <input type="text" id="pollLink" readonly style="width: 90%; padding: 5px;">
+        <button onclick="copyLink()">Salin Pautan</button>
+        
         <p style="margin-top: 20px; font-size: 14px; color: gray;">@2025 Mr.Syah</p>
     </div>
     
@@ -63,6 +68,7 @@
                 votes[newOption] = 0;
                 document.getElementById('buttons').innerHTML += `<button onclick="vote('${newOption}')">${newOption}</button>`;
                 updateResults();
+                updatePollLink();
             }
             document.getElementById('newOption').value = "";
         }
@@ -75,6 +81,7 @@
         function resetVotes() {
             votes = {}; // Kosongkan pilihan
             document.getElementById('buttons').innerHTML = ""; // Kosongkan butang pilihan
+            document.getElementById('pollLink').value = ""; // Kosongkan pautan
             updateResults();
         }
 
@@ -92,6 +99,29 @@
             voteChart.data.datasets[0].data = data;
             voteChart.update();
         }
+
+        function updatePollLink() {
+            let pollData = encodeURIComponent(JSON.stringify(votes));
+            let pollLink = `${window.location.origin}${window.location.pathname}?poll=${pollData}`;
+            document.getElementById('pollLink').value = pollLink;
+        }
+
+        function copyLink() {
+            let pollLink = document.getElementById('pollLink');
+            pollLink.select();
+            document.execCommand("copy");
+            alert("Pautan disalin!");
+        }
+
+        function loadPollFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('poll')) {
+                votes = JSON.parse(decodeURIComponent(urlParams.get('poll')));
+                updateResults();
+            }
+        }
+
+        window.onload = loadPollFromURL;
     </script>
 </body>
 </html>
