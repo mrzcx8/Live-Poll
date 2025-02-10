@@ -43,48 +43,52 @@
     <script>
         let votes = {};
         const ctx = document.getElementById('voteChart').getContext('2d');
-        
         const voteChart = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Undian',
-                    data: [],
-                    backgroundColor: ['#007BFF', '#FF5733', '#28A745', '#FFC107', '#6C757D']
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
+            data: { labels: [], datasets: [{ label: 'Undian', data: [], backgroundColor: ['#007BFF', '#FF5733', '#28A745', '#FFC107', '#6C757D'] }] },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
         });
-
+        
+        async function fetchVotes() {
+            const response = await fetch('https://script.google.com/macros/s/AKfycbyyfrkyFLFjeV1wemjxulVthWt8fKfiimwgbXNp3SJ1tVyNHnX-WTm138B6Gq_bqq-H/exec');
+            const data = await response.json();
+            votes = data;
+            updateResults();
+        }
+        
+        async function vote(option) {
+            votes[option] = (votes[option] || 0) + 1;
+            await fetch('https://script.google.com/macros/s/AKfycbyyfrkyFLFjeV1wemjxulVthWt8fKfiimwgbXNp3SJ1tVyNHnX-WTm138B6Gq_bqq-H/exec', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(votes)
+            });
+            updateResults();
+        }
+        
         function addOption() {
             let newOption = document.getElementById('newOption').value;
             if (newOption && !votes[newOption]) {
                 votes[newOption] = 0;
                 document.getElementById('buttons').innerHTML += `<button onclick="vote('${newOption}')">${newOption}</button>`;
                 updateResults();
-                updatePollLink();
             }
             document.getElementById('newOption').value = "";
         }
-
-        function vote(option) {
-            votes[option]++;
-            updateResults();
-        }
-
+        
         function resetVotes() {
-            votes = {}; // Kosongkan pilihan
-            document.getElementById('buttons').innerHTML = ""; // Kosongkan butang pilihan
-            document.getElementById('pollLink').value = ""; // Kosongkan pautan
+            votes = {};
+            document.getElementById('buttons').innerHTML = "";
+            document.getElementById('results').innerHTML = "";
+            document.getElementById('pollLink').value = "";
+            fetch('https://script.google.com/macros/s/AKfycbyyfrkyFLFjeV1wemjxulVthWt8fKfiimwgbXNp3SJ1tVyNHnX-WTm138B6Gq_bqq-H/exec', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(votes)
+            });
             updateResults();
         }
-
+        
         function updateResults() {
             let resultsHtml = "";
             let labels = [], data = [];
@@ -94,34 +98,19 @@
                 data.push(votes[key]);
             }
             document.getElementById("results").innerHTML = resultsHtml;
-            
             voteChart.data.labels = labels;
             voteChart.data.datasets[0].data = data;
             voteChart.update();
         }
-
-        function updatePollLink() {
-            let pollData = encodeURIComponent(JSON.stringify(votes));
-            let pollLink = `${window.location.origin}${window.location.pathname}?poll=${pollData}`;
-            document.getElementById('pollLink').value = pollLink;
-        }
-
+        
         function copyLink() {
             let pollLink = document.getElementById('pollLink');
             pollLink.select();
             document.execCommand("copy");
             alert("Pautan disalin!");
         }
-
-        function loadPollFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('poll')) {
-                votes = JSON.parse(decodeURIComponent(urlParams.get('poll')));
-                updateResults();
-            }
-        }
-
-        window.onload = loadPollFromURL;
+        
+        window.onload = fetchVotes;
     </script>
 </body>
 </html>
